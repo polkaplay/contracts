@@ -15,10 +15,9 @@ import "./ERC20Permit.sol";
  */
 contract PolkaPlayToken is ERC20Permit, Ownable {
     uint256 public constant MAX_CAP = 1_800_000_000 * (10**18); // 1.8 billion tokens
-
     address public governance;
 
-    event RecoverToken(address indexed token, address indexed destination, uint256 indexed amount);
+    event GovernanceChanged(address indexed previousGovernance, address indexed newGovernance);
 
     modifier onlyGovernance() {
         require(msg.sender == governance, "!governance");
@@ -35,24 +34,10 @@ contract PolkaPlayToken is ERC20Permit, Ownable {
      * Owner is assumed to be governance
      * @param _governance Address of governance contract
      */
-    function setGovernance(address _governance) public onlyGovernance {
+    function setGovernance(address _governance) external onlyGovernance {
+        require(_governance != address(0), "Invalid address");
         governance = _governance;
-    }
+        emit GovernanceChanged(msg.sender, _governance);
 
-    /**
-     * @notice Function to recover funds
-     * Owner is assumed to be governance or Polo trusted party for helping users
-     * @param token Address of token to be rescued
-     * @param destination User address
-     * @param amount Amount of tokens
-     */
-    function recoverToken(
-        address token,
-        address destination,
-        uint256 amount
-    ) external onlyGovernance {
-        require(token != destination, "Invalid address");
-        require(IERC20(token).transfer(destination, amount), "Retrieve failed");
-        emit RecoverToken(token, destination, amount);
     }
 }
